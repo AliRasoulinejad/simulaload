@@ -177,4 +177,61 @@ describe("SimulationEngine", () => {
     const snapshot3 = engine.getSnapshot();
     expect(Object.is(snapshot2, snapshot3)).toBe(false);
   });
+
+  it("counts only upstreams reachable from the Entry Point, so fan-in load is correct on every tick", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 40 }));
+    engine.addNode(new ApplicationComponent("appA", { capacity: 1000, queueDepth: 0 }));
+    engine.addNode(new ApplicationComponent("appB", { capacity: 1000, queueDepth: 0 }));
+    engine.addNode(new DatabaseComponent("db", { capacity: 1000, queueDepth: 0 }));
+    engine.addEdge("entry", "appA", "e1");
+    engine.addEdge("appA", "db", "e2");
+    engine.addEdge("appB", "db", "e3"); // appB has no incoming edge: unreachable
+
+    engine.tick();
+    expect(engine.getSnapshot().nodes["db"].currentRps).toBe(40);
+    engine.tick();
+    expect(engine.getSnapshot().nodes["db"].currentRps).toBe(40);
+
+    // Once appB becomes reachable (via an LB splitting 50/50), db waits for both upstreams each tick.
+    engine.addNode(new LoadBalancerComponent("lb", { capacity: 1000, queueDepth: 0 }));
+    engine.removeEdge("e1");
+    engine.addEdge("entry", "lb", "e4");
+    engine.addEdge("lb", "appA", "e5");
+    engine.addEdge("lb", "appB", "e6");
+    for (let i = 0; i < 2; i += 1) {
+      engine.tick();
+      const nodes = engine.getSnapshot().nodes;
+      expect(nodes["appA"].currentRps).toBe(20);
+      expect(nodes["appB"].currentRps).toBe(20);
+      expect(nodes["db"].currentRps).toBe(40);
+    }
+  });
+
+  it("rejects a second parallel edge between the same source and target", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new LoadBalancerComponent("lb", { capacity: 100, queueDepth: 0 }));
+    engine.addNode(new ApplicationComponent("app", { capacity: 100, queueDepth: 0 }));
+    engine.addEdge("lb", "app", "e1");
+
+    expect(engine.canConnect("lb", "app")).toBe(false);
+    expect(() => engine.addEdge("lb", "app", "e2")).toThrow(/already exists/);
+    expect(engine.getEdges()).toHaveLength(1);
+  });
+
+  it("clear() empties the engine in place, keeps listeners, and allows a new Entry Point", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));
+    engine.addNode(new LoadBalancerComponent("lb", { capacity: 10, queueDepth: 0 }));
+    engine.addEdge("entry", "lb", "e1");
+    const listener = vi.fn();
+    engine.subscribe(listener);
+
+    engine.clear();
+
+    expect(engine.getSnapshot().nodes).toEqual({});
+    expect(engine.getEdges()).toEqual([]);
+    expect(listener).toHaveBeenCalled();
+    expect(() => engine.addNode(new EntryPointComponent("entry2", { targetRps: 10 }))).not.toThrow();
+  });
 });

@@ -34,6 +34,21 @@ export abstract class ReactiveSubscriberBase implements LoadSubscriberInterface,
     this.expectedUpstreamCount = Math.max(0, this.expectedUpstreamCount - 1);
   }
 
+  /**
+   * Directly sets how many upstream arrivals complete one tick. Called by the
+   * engine after every graph edit with the count of upstreams reachable from
+   * the Entry Point. When the count changes, any partially-buffered tick is
+   * discarded so stale arrivals from the old topology can't be merged into
+   * the next flush.
+   */
+  setExpectedUpstreamCount(count: number): void {
+    const next = Math.max(0, count);
+    if (next === this.expectedUpstreamCount) return;
+    this.expectedUpstreamCount = next;
+    this.arrivals = 0;
+    this.buffer = 0;
+  }
+
   onLoadReceived(amount: number, _fromNodeId: NodeId): void {
     this.buffer += amount;
     this.arrivals += 1;

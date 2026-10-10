@@ -5,6 +5,7 @@ import { ApplicationComponent } from "./components/ApplicationComponent";
 import { CacheComponent } from "./components/CacheComponent";
 import { DatabaseComponent } from "./components/DatabaseComponent";
 import type { LoadPublisherInterface, LoadSubscriberInterface } from "./interfaces";
+import { ReactiveSubscriberBase } from "./ReactiveSubscriberBase";
 import type { EdgeId, EngineSnapshot, NodeId } from "./types";
 
 export type AnyComponent =
@@ -44,6 +45,7 @@ export class SimulationEngine {
       this.entryPointId = component.nodeId;
     }
     this.nodes.set(component.nodeId, component);
+    this.recomputeExpectedUpstreamCounts();
     this.notify();
   }
 
@@ -53,8 +55,25 @@ export class SimulationEngine {
         this.removeEdge(edgeId);
       }
     }
-    if (nodeId === this.entryPointId) this.entryPointId = null;
+    if (nodeId === this.entryPointId) {
+      this.getEntryPoint()?.stopClock();
+      this.entryPointId = null;
+    }
     this.nodes.delete(nodeId);
+    this.recomputeExpectedUpstreamCounts();
+    this.notify();
+  }
+
+  /**
+   * Empties the engine in place (keeping object identity, so existing
+   * `subscribe()` listeners stay valid). Stops the clock first.
+   */
+  clear(): void {
+    this.pause();
+    for (const nodeId of Array.from(this.nodes.keys())) {
+      this.removeNode(nodeId);
+    }
+    this.entryPointId = null;
     this.notify();
   }
 
@@ -62,6 +81,10 @@ export class SimulationEngine {
     const source = this.nodes.get(sourceId);
     const target = this.nodes.get(targetId);
     if (!source || !target) throw new Error("Unknown node referenced in edge");
+    if (this.edgeRecords.has(edgeId)) throw new Error(`An edge with id ${edgeId} already exists`);
+    if (this.hasEdgeBetween(sourceId, targetId)) {
+      throw new Error(`An edge from ${sourceId} to ${targetId} already exists`);
+    }
     if (!isPublisher(source)) throw new Error(`${source.type} cannot have outgoing edges`);
     if (this.violatesSingleOutgoingEdgeRule(source)) {
       throw new Error(`${source.type} only supports a single outgoing edge`);
@@ -75,6 +98,7 @@ export class SimulationEngine {
     }
     source.subscribe(target, { edgeId, targetId, weight });
     this.edgeRecords.set(edgeId, { sourceId, targetId, weight });
+    this.recomputeExpectedUpstreamCounts();
     this.notify();
   }
 
@@ -84,6 +108,7 @@ export class SimulationEngine {
     const source = this.nodes.get(record.sourceId);
     if (source && isPublisher(source)) source.unsubscribe(record.targetId);
     this.edgeRecords.delete(edgeId);
+    this.recomputeExpectedUpstreamCounts();
     this.notify();
   }
 
@@ -92,9 +117,51 @@ export class SimulationEngine {
     const target = this.nodes.get(targetId);
     if (!source || !target) return false;
     if (!isPublisher(source) || !isSubscriber(target)) return false;
+    if (this.hasEdgeBetween(sourceId, targetId)) return false;
     if (this.violatesSingleOutgoingEdgeRule(source)) return false;
     if (!target.canAcceptUpstream(source.type)) return false;
     return !this.wouldCreateCycle(sourceId, targetId);
+  }
+
+  private hasEdgeBetween(sourceId: NodeId, targetId: NodeId): boolean {
+    for (const record of this.edgeRecords.values()) {
+      if (record.sourceId === sourceId && record.targetId === targetId) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Sets every subscriber's expected per-tick arrival count to the number of
+   * its upstream edges whose source is reachable from the Entry Point. An
+   * unreachable upstream never ticks, so counting it would make the
+   * subscriber wait across several real ticks and flush an inflated amount.
+   */
+  private recomputeExpectedUpstreamCounts(): void {
+    const reachable = new Set<NodeId>();
+    if (this.entryPointId !== null && this.nodes.has(this.entryPointId)) {
+      const stack: NodeId[] = [this.entryPointId];
+      while (stack.length > 0) {
+        const current = stack.pop() as NodeId;
+        if (reachable.has(current)) continue;
+        reachable.add(current);
+        for (const record of this.edgeRecords.values()) {
+          if (record.sourceId === current) stack.push(record.targetId);
+        }
+      }
+    }
+
+    const counts = new Map<NodeId, number>();
+    for (const record of this.edgeRecords.values()) {
+      if (reachable.has(record.sourceId)) {
+        counts.set(record.targetId, (counts.get(record.targetId) ?? 0) + 1);
+      }
+    }
+
+    for (const component of this.nodes.values()) {
+      if (component instanceof ReactiveSubscriberBase) {
+        component.setExpectedUpstreamCount(counts.get(component.nodeId) ?? 0);
+      }
+    }
   }
 
   private hasExistingOutgoingEdge(sourceId: NodeId): boolean {

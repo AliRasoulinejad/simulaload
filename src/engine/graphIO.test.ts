@@ -63,4 +63,58 @@ describe("graphIO", () => {
 
     expect(() => importGraph(engine, badJson)).toThrow();
   });
+
+  it("replaces the existing graph on a second import instead of accumulating into it", () => {
+    const graphA = JSON.stringify({
+      version: 1,
+      nodes: [
+        { nodeId: "entryA", type: "entryPoint", position: { x: 0, y: 0 }, config: { targetRps: 10 } },
+        { nodeId: "cdnA", type: "cdn", position: { x: 100, y: 0 }, config: {} },
+      ],
+      edges: [{ edgeId: "eA", sourceId: "entryA", targetId: "cdnA", weight: 100 }],
+    });
+    const graphB = JSON.stringify({
+      version: 1,
+      nodes: [
+        { nodeId: "entryB", type: "entryPoint", position: { x: 0, y: 0 }, config: { targetRps: 25 } },
+        { nodeId: "lbB", type: "loadBalancer", position: { x: 100, y: 0 }, config: {} },
+      ],
+      edges: [{ edgeId: "eB", sourceId: "entryB", targetId: "lbB", weight: 100 }],
+    });
+    const engine = new SimulationEngine();
+
+    importGraph(engine, graphA);
+    const positions = importGraph(engine, graphB);
+
+    expect(Object.keys(engine.getSnapshot().nodes).sort()).toEqual(["entryB", "lbB"]);
+    expect(engine.getEdges()).toEqual([{ edgeId: "eB", sourceId: "entryB", targetId: "lbB", weight: 100 }]);
+    expect(Object.keys(positions).sort()).toEqual(["entryB", "lbB"]);
+    engine.tick();
+    expect(engine.getSnapshot().nodes["lbB"].currentRps).toBe(25);
+  });
+
+  it("leaves an existing graph completely unchanged when an import fails a semantic engine check", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(createComponent("entryPoint", "entry1", { targetRps: 30 }));
+    engine.addNode(createComponent("cdn", "cdn1"));
+    engine.addEdge("entry1", "cdn1", "e1");
+    const nodesBefore = Object.keys(engine.getSnapshot().nodes).sort();
+    const edgesBefore = engine.getEdges();
+
+    // Passes the schema and structural checks, but entryPoint -> cache violates the upstream matrix.
+    const badJson = JSON.stringify({
+      version: 1,
+      nodes: [
+        { nodeId: "cacheX", type: "cache", position: { x: 100, y: 0 }, config: {} },
+        { nodeId: "entryX", type: "entryPoint", position: { x: 0, y: 0 }, config: { targetRps: 10 } },
+      ],
+      edges: [{ edgeId: "eX", sourceId: "entryX", targetId: "cacheX", weight: 100 }],
+    });
+
+    expect(() => importGraph(engine, badJson)).toThrow();
+    expect(Object.keys(engine.getSnapshot().nodes).sort()).toEqual(nodesBefore);
+    expect(engine.getEdges()).toEqual(edgesBefore);
+    engine.tick();
+    expect(engine.getSnapshot().nodes["cdn1"].currentRps).toBe(30);
+  });
 });
