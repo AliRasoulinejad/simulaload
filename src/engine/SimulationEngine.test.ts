@@ -128,4 +128,18 @@ describe("SimulationEngine", () => {
 
     expect(listener).toHaveBeenCalled();
   });
+
+  it("caches getSnapshot() result until the next mutation", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));
+
+    const snapshot1 = engine.getSnapshot();
+    const snapshot2 = engine.getSnapshot();
+    expect(Object.is(snapshot1, snapshot2)).toBe(true);
+
+    engine.tick();
+
+    const snapshot3 = engine.getSnapshot();
+    expect(Object.is(snapshot2, snapshot3)).toBe(false);
+  });
 });

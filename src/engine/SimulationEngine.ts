@@ -34,6 +34,7 @@ export class SimulationEngine {
   private edgeRecords = new Map<EdgeId, EdgeRecord>();
   private entryPointId: NodeId | null = null;
   private listeners = new Set<() => void>();
+  private cachedSnapshot: EngineSnapshot | null = null;
 
   addNode(component: AnyComponent): void {
     if (component.type === "entryPoint") {
@@ -134,6 +135,8 @@ export class SimulationEngine {
   }
 
   getSnapshot(): EngineSnapshot {
+    if (this.cachedSnapshot !== null) return this.cachedSnapshot;
+
     const nodes: EngineSnapshot["nodes"] = {};
     const edgeLoads: EngineSnapshot["edgeLoads"] = {};
 
@@ -145,7 +148,8 @@ export class SimulationEngine {
       }
     }
 
-    return { nodes, edgeLoads };
+    this.cachedSnapshot = { nodes, edgeLoads };
+    return this.cachedSnapshot;
   }
 
   subscribe(listener: () => void): () => void {
@@ -158,6 +162,7 @@ export class SimulationEngine {
   }
 
   private notify(): void {
+    this.cachedSnapshot = null;
     for (const listener of this.listeners) listener();
   }
 }
