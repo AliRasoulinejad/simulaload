@@ -3,6 +3,7 @@ import { SimulationEngine } from "./engine/SimulationEngine";
 import { createComponent } from "./engine/factory";
 import { SimulaloadCanvas } from "./ui/canvas/SimulaloadCanvas";
 import { Toolbox } from "./ui/toolbox/Toolbox";
+import { InspectorPanel } from "./ui/inspector/InspectorPanel";
 import type { ComponentType, NodeId } from "./engine/types";
 
 const engine = new SimulationEngine();
@@ -10,6 +11,7 @@ let nextId = 1;
 
 function App() {
   const [positions, setPositions] = useState<Record<NodeId, { x: number; y: number }>>({});
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>(null);
 
   const handleAdd = useCallback((type: ComponentType) => {
     const nodeId = `${type}-${nextId++}`;
@@ -20,7 +22,12 @@ function App() {
   return (
     <div style={{ display: "flex", width: "100vw", height: "100vh" }}>
       <Toolbox onAdd={handleAdd} />
-      <SimulaloadCanvas engine={engine} nodePositions={positions} />
+      <SimulaloadCanvas
+        engine={engine}
+        nodePositions={positions}
+        onNodeClick={setSelectedNodeId}
+      />
+      <InspectorPanel engine={engine} selectedNodeId={selectedNodeId} />
     </div>
   );
 }

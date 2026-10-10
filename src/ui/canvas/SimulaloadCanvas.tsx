@@ -16,9 +16,10 @@ import type { NodeId } from "../../engine/types";
 interface SimulaloadCanvasProps {
   engine: SimulationEngine;
   nodePositions: Record<NodeId, { x: number; y: number }>;
+  onNodeClick?: (nodeId: NodeId) => void;
 }
 
-export function SimulaloadCanvas({ engine, nodePositions }: SimulaloadCanvasProps) {
+export function SimulaloadCanvas({ engine, nodePositions, onNodeClick }: SimulaloadCanvasProps) {
   const snapshot = useEngineSnapshot(engine);
 
   const nodes = useMemo(
@@ -68,6 +69,7 @@ export function SimulaloadCanvas({ engine, nodePositions }: SimulaloadCanvasProp
           nodeTypes={nodeTypes}
           isValidConnection={isValidConnection}
           onConnect={onConnect}
+          onNodeClick={(_, node) => onNodeClick?.(node.id)}
           fitView
         >
           <Background />
