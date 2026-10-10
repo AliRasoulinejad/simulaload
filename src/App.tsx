@@ -5,6 +5,7 @@ import { SimulaloadCanvas } from "./ui/canvas/SimulaloadCanvas";
 import { Toolbox } from "./ui/toolbox/Toolbox";
 import { InspectorPanel } from "./ui/inspector/InspectorPanel";
 import { SummaryBar } from "./ui/summary/SummaryBar";
+import { PersistenceControls } from "./ui/persistence/PersistenceControls";
 import { useEngineSnapshot } from "./ui/hooks/useEngineSnapshot";
 import type { ComponentType, NodeId } from "./engine/types";
 
@@ -20,7 +21,7 @@ function App() {
   const snapshot = useEngineSnapshot(engine);
 
   const handleAdd = useCallback((type: ComponentType) => {
-    const nodeId = `${type}-${nextId++}`;
+    const nodeId = `${type}-${Date.now()}-${nextId++}`;
     engine.addNode(createComponent(type, nodeId));
     setPositions((prev) => ({ ...prev, [nodeId]: { x: 100 + nextId * 20, y: 100 } }));
   }, []);
@@ -39,6 +40,14 @@ function App() {
         />
         <InspectorPanel engine={engine} selectedNodeId={selectedNodeId} />
       </div>
+      <PersistenceControls
+        engine={engine}
+        positions={positions}
+        onImported={(positions) => {
+          setPositions(positions);
+          setEdgeRegistry(engine.getEdges().map(({ edgeId, sourceId, targetId }) => ({ edgeId, source: sourceId, target: targetId })));
+        }}
+      />
     </div>
   );
 }

@@ -155,6 +155,15 @@ describe("SimulationEngine", () => {
     expect(listener).toHaveBeenCalled();
   });
 
+  it("getEdges returns the edges added via addEdge", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));
+    engine.addNode(new LoadBalancerComponent("lb", { capacity: 10, queueDepth: 0 }));
+    engine.addEdge("entry", "lb", "e1", 100);
+
+    expect(engine.getEdges()).toEqual([{ edgeId: "e1", sourceId: "entry", targetId: "lb", weight: 100 }]);
+  });
+
   it("caches getSnapshot() result until the next mutation", () => {
     const engine = new SimulationEngine();
     engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));

@@ -170,6 +170,10 @@ export class SimulationEngine {
     return this.nodes.get(nodeId);
   }
 
+  getEdges(): { edgeId: EdgeId; sourceId: NodeId; targetId: NodeId; weight: number }[] {
+    return Array.from(this.edgeRecords.entries()).map(([edgeId, record]) => ({ edgeId, ...record }));
+  }
+
   private notify(): void {
     this.cachedSnapshot = null;
     for (const listener of this.listeners) listener();
