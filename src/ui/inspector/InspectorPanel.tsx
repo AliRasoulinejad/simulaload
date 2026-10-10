@@ -13,6 +13,22 @@ interface NumericField {
   step?: number;
 }
 
+/** Ratio fields (e.g. cacheHitRatio, hitRatio) are fractions in [0, 1]. */
+function isRatioField(key: string): boolean {
+  return key.endsWith("Ratio");
+}
+
+/**
+ * Clamps a raw input value into the field's valid range. The HTML min/max
+ * attributes are only a soft hint, so this is the real guard: negative
+ * capacities/queues/RPS or ratios outside [0, 1] would corrupt the engine math.
+ */
+function clampFieldValue(key: string, value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  const nonNegative = Math.max(0, value);
+  return isRatioField(key) ? Math.min(1, nonNegative) : nonNegative;
+}
+
 const fieldsByType: Record<string, NumericField[]> = {
   entryPoint: [{ key: "targetRps", label: "Target RPS", step: 1 }],
   cdn: [
@@ -62,9 +78,11 @@ export function InspectorPanel({ engine, selectedNodeId }: InspectorPanelProps) 
           <input
             type="number"
             step={field.step ?? 1}
+            min={0}
+            max={isRatioField(field.key) ? 1 : undefined}
             value={config[field.key]}
             onChange={(event) => {
-              const value = Number(event.target.value);
+              const value = clampFieldValue(field.key, Number(event.target.value));
               node.setConfig({ [field.key]: value } as never);
               forceRender((n) => n + 1);
             }}
