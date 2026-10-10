@@ -1,5 +1,7 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { NodeMetricsSnapshot } from "../../engine/types";
+import { formatTypeLabel } from "./formatTypeLabel";
+import "./componentNode.css";
 
 export interface ComponentNodeData {
   snapshot: NodeMetricsSnapshot;
@@ -13,7 +15,7 @@ export function ComponentNode({ data }: Partial<NodeProps> & { data: ComponentNo
   return (
     <div data-testid="component-node" className={`component-node status-${snapshot.status}`}>
       <Handle type="target" position={Position.Left} />
-      <div className="component-node__label">{snapshot.type}</div>
+      <div className="component-node__label">{formatTypeLabel(snapshot.type)}</div>
       <div className="component-node__rps">{Math.round(snapshot.currentRps)} rps</div>
       <div className="component-node__bar">
         <div className="component-node__bar-fill" style={{ width: `${utilizationPercent}%` }} />

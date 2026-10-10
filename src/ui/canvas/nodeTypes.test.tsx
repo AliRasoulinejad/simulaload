@@ -1,8 +1,9 @@
 import type React from "react";
-import { describe, it, expect, afterEach } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { ComponentNode } from "./nodeTypes";
+import { formatTypeLabel } from "./formatTypeLabel";
 import type { NodeMetricsSnapshot } from "../../engine/types";
 
 function renderNode(ui: React.ReactElement) {
@@ -21,10 +22,6 @@ const baseSnapshot: NodeMetricsSnapshot = {
 };
 
 describe("ComponentNode", () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   it("renders the component type label and current RPS", () => {
     renderNode(<ComponentNode data={{ snapshot: baseSnapshot }} id="app1" type="application" />);
     expect(screen.getByText(/application/i)).toBeInTheDocument();
@@ -35,5 +32,12 @@ describe("ComponentNode", () => {
     const overloaded = { ...baseSnapshot, status: "overloaded" as const };
     renderNode(<ComponentNode data={{ snapshot: overloaded }} id="app1" type="application" />);
     expect(screen.getByTestId("component-node")).toHaveClass("status-overloaded");
+  });
+
+  it("formats type keys into readable labels", () => {
+    expect(formatTypeLabel("loadBalancer")).toBe("Load Balancer");
+    expect(formatTypeLabel("entryPoint")).toBe("Entry Point");
+    expect(formatTypeLabel("cdn")).toBe("CDN");
+    expect(formatTypeLabel("database")).toBe("Database");
   });
 });
