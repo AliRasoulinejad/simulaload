@@ -33,6 +33,23 @@ describe("graphIO", () => {
     expect(engine.getNode("entry1")).toBeUndefined();
   });
 
+  it("throws and does not mutate the target engine when the JSON contains duplicate node IDs", () => {
+    const badJson = JSON.stringify({
+      version: 1,
+      nodes: [
+        { nodeId: "entry1", type: "entryPoint", position: { x: 0, y: 0 }, config: { targetRps: 10 } },
+        { nodeId: "dup1", type: "cdn", position: { x: 100, y: 0 }, config: {} },
+        { nodeId: "dup1", type: "cache", position: { x: 200, y: 0 }, config: {} },
+      ],
+      edges: [],
+    });
+    const engine = new SimulationEngine();
+
+    expect(() => importGraph(engine, badJson)).toThrow();
+    expect(engine.getNode("entry1")).toBeUndefined();
+    expect(engine.getNode("dup1")).toBeUndefined();
+  });
+
   it("throws when the JSON contains more than one entryPoint", () => {
     const badJson = JSON.stringify({
       version: 1,

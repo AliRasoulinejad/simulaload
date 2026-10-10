@@ -70,6 +70,16 @@ export function assertEdgesReferenceKnownNodes(graph: SimulationGraph): void {
   }
 }
 
+export function assertNoDuplicateNodeIds(graph: SimulationGraph): void {
+  const seen = new Set<NodeId>();
+  for (const node of graph.nodes) {
+    if (seen.has(node.nodeId)) {
+      throw new Error(`Duplicate node id: ${node.nodeId}`);
+    }
+    seen.add(node.nodeId);
+  }
+}
+
 export function assertSingleEntryPoint(graph: SimulationGraph): void {
   const entryPoints = graph.nodes.filter((node) => node.type === "entryPoint");
   if (entryPoints.length !== 1) {

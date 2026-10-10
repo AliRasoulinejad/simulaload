@@ -1,5 +1,11 @@
 import { createComponent } from "./factory";
-import { assertEdgesReferenceKnownNodes, assertSingleEntryPoint, deserializeGraph, serializeGraph } from "./persistence";
+import {
+  assertEdgesReferenceKnownNodes,
+  assertNoDuplicateNodeIds,
+  assertSingleEntryPoint,
+  deserializeGraph,
+  serializeGraph,
+} from "./persistence";
 import type { SimulationEngine } from "./SimulationEngine";
 import type { ComponentType, NodeId } from "./types";
 
@@ -22,6 +28,7 @@ export function exportGraph(engine: SimulationEngine, positions: Record<NodeId, 
 export function importGraph(engine: SimulationEngine, json: string): Record<NodeId, { x: number; y: number }> {
   const graph = deserializeGraph(json);
   assertSingleEntryPoint(graph);
+  assertNoDuplicateNodeIds(graph);
   assertEdgesReferenceKnownNodes(graph);
 
   const positions: Record<NodeId, { x: number; y: number }> = {};

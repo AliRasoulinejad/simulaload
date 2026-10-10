@@ -3,6 +3,7 @@ import {
   serializeGraph,
   deserializeGraph,
   assertEdgesReferenceKnownNodes,
+  assertNoDuplicateNodeIds,
   assertSingleEntryPoint,
 } from "./persistence";
 import type { SimulationGraphEdge, SimulationGraphNode } from "./persistence";
@@ -43,6 +44,20 @@ describe("persistence", () => {
   it("rejects an edge referencing a node ID that is not in the nodes list", () => {
     const json = serializeGraph(sampleNodes, [{ edgeId: "eBad", sourceId: "entry", targetId: "doesNotExist", weight: 100 }]);
     expect(() => assertEdgesReferenceKnownNodes(deserializeGraph(json))).toThrow();
+  });
+
+  it("rejects a graph with two nodes sharing the same nodeId", () => {
+    const duplicateNodes: SimulationGraphNode[] = [
+      ...sampleNodes,
+      { nodeId: "cdn", type: "cache", position: { x: 50, y: 50 }, config: { capacity: 100 } },
+    ];
+    const json = serializeGraph(duplicateNodes, []);
+    expect(() => assertNoDuplicateNodeIds(deserializeGraph(json))).toThrow();
+  });
+
+  it("does not throw for a graph with all-unique node IDs", () => {
+    const json = serializeGraph(sampleNodes, sampleEdges);
+    expect(() => assertNoDuplicateNodeIds(deserializeGraph(json))).not.toThrow();
   });
 
   it("rejects a graph with more than one entryPoint node", () => {
