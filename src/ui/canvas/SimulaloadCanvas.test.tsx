@@ -10,7 +10,13 @@ describe("SimulaloadCanvas", () => {
     engine.addNode(createComponent("entryPoint", "entry1"));
     engine.addNode(createComponent("cdn", "cdn1"));
 
-    render(<SimulaloadCanvas engine={engine} nodePositions={{ entry1: { x: 0, y: 0 }, cdn1: { x: 200, y: 0 } }} />);
+    render(
+      <SimulaloadCanvas
+        engine={engine}
+        nodePositions={{ entry1: { x: 0, y: 0 }, cdn1: { x: 200, y: 0 } }}
+        edgeRegistry={[]}
+      />,
+    );
 
     expect(screen.getByText(/entryPoint/i)).toBeInTheDocument();
     expect(screen.getByText(/cdn/i)).toBeInTheDocument();
@@ -20,7 +26,7 @@ describe("SimulaloadCanvas", () => {
     const engine = new SimulationEngine();
     engine.addNode(createComponent("entryPoint", "entry1", { targetRps: 77 }));
 
-    render(<SimulaloadCanvas engine={engine} nodePositions={{ entry1: { x: 0, y: 0 } }} />);
+    render(<SimulaloadCanvas engine={engine} nodePositions={{ entry1: { x: 0, y: 0 } }} edgeRegistry={[]} />);
     act(() => engine.tick());
 
     expect(screen.getByText(/77/)).toBeInTheDocument();

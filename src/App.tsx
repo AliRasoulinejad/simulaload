@@ -14,6 +14,9 @@ let nextId = 1;
 function App() {
   const [positions, setPositions] = useState<Record<NodeId, { x: number; y: number }>>({});
   const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>(null);
+  const [edgeRegistry, setEdgeRegistry] = useState<
+    { edgeId: string; source: NodeId; target: NodeId }[]
+  >([]);
   const snapshot = useEngineSnapshot(engine);
 
   const handleAdd = useCallback((type: ComponentType) => {
@@ -30,7 +33,9 @@ function App() {
         <SimulaloadCanvas
           engine={engine}
           nodePositions={positions}
+          edgeRegistry={edgeRegistry}
           onNodeClick={setSelectedNodeId}
+          onEdgeCreated={(edge) => setEdgeRegistry((prev) => [...prev, edge])}
         />
         <InspectorPanel engine={engine} selectedNodeId={selectedNodeId} />
       </div>

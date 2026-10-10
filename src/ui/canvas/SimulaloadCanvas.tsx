@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nodeTypes } from "./nodeTypes";
+import { computeEdgeStyle } from "./computeEdgeStyle";
 import { useEngineSnapshot } from "../hooks/useEngineSnapshot";
 import type { SimulationEngine } from "../../engine/SimulationEngine";
 import type { NodeId } from "../../engine/types";
@@ -16,10 +17,18 @@ import type { NodeId } from "../../engine/types";
 interface SimulaloadCanvasProps {
   engine: SimulationEngine;
   nodePositions: Record<NodeId, { x: number; y: number }>;
+  edgeRegistry: { edgeId: string; source: NodeId; target: NodeId }[];
   onNodeClick?: (nodeId: NodeId) => void;
+  onEdgeCreated?: (edge: { edgeId: string; source: NodeId; target: NodeId }) => void;
 }
 
-export function SimulaloadCanvas({ engine, nodePositions, onNodeClick }: SimulaloadCanvasProps) {
+export function SimulaloadCanvas({
+  engine,
+  nodePositions,
+  edgeRegistry,
+  onNodeClick,
+  onEdgeCreated,
+}: SimulaloadCanvasProps) {
   const snapshot = useEngineSnapshot(engine);
 
   const nodes = useMemo(
@@ -34,12 +43,19 @@ export function SimulaloadCanvas({ engine, nodePositions, onNodeClick }: Simulal
   );
 
   const edges = useMemo(() => {
-    const edgeEntries: { id: string; source: string; target: string }[] = [];
-    for (const edgeId of Object.keys(snapshot.edgeLoads)) {
-      edgeEntries.push({ id: edgeId, source: "", target: "" }); // source/target filled by App.tsx edge registry in Task 19
-    }
-    return edgeEntries;
-  }, [snapshot]);
+    const maxLoad = Math.max(1, ...Object.values(snapshot.edgeLoads));
+    return edgeRegistry.map(({ edgeId, source, target }) => {
+      const load = snapshot.edgeLoads[edgeId] ?? 0;
+      const style = computeEdgeStyle(load, maxLoad);
+      return {
+        id: edgeId,
+        source,
+        target,
+        animated: style.animated,
+        style: { strokeWidth: style.strokeWidth, opacity: style.opacity },
+      };
+    });
+  }, [snapshot, edgeRegistry]);
 
   const isValidConnection: IsValidConnection = useCallback(
     (connection) => {
@@ -55,9 +71,14 @@ export function SimulaloadCanvas({ engine, nodePositions, onNodeClick }: Simulal
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
       const edgeId = `${connection.source}->${connection.target}`;
-      engine.addEdge(connection.source, connection.target, edgeId);
+      try {
+        engine.addEdge(connection.source, connection.target, edgeId);
+      } catch {
+        return;
+      }
+      onEdgeCreated?.({ edgeId, source: connection.source, target: connection.target });
     },
-    [engine],
+    [engine, onEdgeCreated],
   );
 
   return (
