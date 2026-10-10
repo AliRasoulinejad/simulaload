@@ -14,10 +14,13 @@ export abstract class ReactiveSubscriberBase implements LoadSubscriberInterface,
   private lastDroppedThisTick = 0;
   private droppedTotal = 0;
 
-  protected constructor(
-    protected readonly capacityModel?: CapacityModelInterface,
-    protected readonly absorptionModel?: AbsorptionModelInterface,
-  ) {}
+  protected readonly capacityModel?: CapacityModelInterface;
+  protected readonly absorptionModel?: AbsorptionModelInterface;
+
+  protected constructor(capacityModel?: CapacityModelInterface, absorptionModel?: AbsorptionModelInterface) {
+    this.capacityModel = capacityModel;
+    this.absorptionModel = absorptionModel;
+  }
 
   canAcceptUpstream(publisherType: ComponentType): boolean {
     return this.allowedUpstreamTypes.has(publisherType);

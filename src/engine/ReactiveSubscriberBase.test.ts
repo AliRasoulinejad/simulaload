@@ -8,6 +8,11 @@ class TestComponent extends ReactiveSubscriberBase {
   readonly type: ComponentType = "application";
   readonly allowedUpstreamTypes: ReadonlySet<ComponentType> = new Set(["entryPoint"]);
   onFlushSpy = vi.fn();
+
+  constructor(capacityModel?: CapacityModel) {
+    super(capacityModel);
+  }
+
   protected onFlush(outgoing: number): void {
     this.onFlushSpy(outgoing);
   }

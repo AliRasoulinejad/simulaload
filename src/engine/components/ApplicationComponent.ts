@@ -12,9 +12,12 @@ export class ApplicationComponent extends ReactiveSubscriberBase implements Conf
   private readonly strategy = new BroadcastStrategy();
   private readonly capacityModelRef: CapacityModel;
 
-  constructor(public readonly nodeId: NodeId, config: ApplicationConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: ApplicationConfig) {
     const capacityModel = new CapacityModel(config.capacity, config.queueDepth);
     super(capacityModel);
+    this.nodeId = nodeId;
     this.capacityModelRef = capacityModel;
     this.registry = new SubscriptionRegistry(nodeId, this.type);
   }

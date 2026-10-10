@@ -14,10 +14,13 @@ export class CdnComponent extends ReactiveSubscriberBase implements Configurable
   private readonly capacityModelRef: CapacityModel;
   private readonly absorptionModelRef: AbsorptionModel;
 
-  constructor(public readonly nodeId: NodeId, config: CdnConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: CdnConfig) {
     const capacityModel = new CapacityModel(config.capacity, config.queueDepth);
     const absorptionModel = new AbsorptionModel(config.cacheHitRatio);
     super(capacityModel, absorptionModel);
+    this.nodeId = nodeId;
     this.capacityModelRef = capacityModel;
     this.absorptionModelRef = absorptionModel;
     this.registry = new SubscriptionRegistry(nodeId, this.type);

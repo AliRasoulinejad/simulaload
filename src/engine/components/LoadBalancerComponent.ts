@@ -12,9 +12,12 @@ export class LoadBalancerComponent extends ReactiveSubscriberBase implements Con
   private readonly strategy = new WeightedSplitStrategy();
   private readonly capacityModelRef: CapacityModel;
 
-  constructor(public readonly nodeId: NodeId, config: LoadBalancerConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: LoadBalancerConfig) {
     const capacityModel = new CapacityModel(config.capacity, config.queueDepth);
     super(capacityModel);
+    this.nodeId = nodeId;
     this.capacityModelRef = capacityModel;
     this.registry = new SubscriptionRegistry(nodeId, this.type);
   }

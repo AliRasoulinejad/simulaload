@@ -14,10 +14,13 @@ export class CacheComponent extends ReactiveSubscriberBase implements Configurab
   private readonly capacityModelRef: CapacityModel;
   private readonly absorptionModelRef: AbsorptionModel;
 
-  constructor(public readonly nodeId: NodeId, config: CacheConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: CacheConfig) {
     const capacityModel = new CapacityModel(config.capacity, config.queueDepth);
     const absorptionModel = new AbsorptionModel(config.hitRatio);
     super(capacityModel, absorptionModel);
+    this.nodeId = nodeId;
     this.capacityModelRef = capacityModel;
     this.absorptionModelRef = absorptionModel;
     this.registry = new SubscriptionRegistry(nodeId, this.type);

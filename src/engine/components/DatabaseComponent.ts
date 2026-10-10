@@ -8,9 +8,12 @@ export class DatabaseComponent extends ReactiveSubscriberBase implements Configu
   readonly allowedUpstreamTypes: ReadonlySet<ComponentType> = new Set(["application", "cache"]);
   private readonly capacityModelRef: CapacityModel;
 
-  constructor(public readonly nodeId: NodeId, config: DatabaseConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: DatabaseConfig) {
     const capacityModel = new CapacityModel(config.capacity, config.queueDepth);
     super(capacityModel);
+    this.nodeId = nodeId;
     this.capacityModelRef = capacityModel;
   }
 

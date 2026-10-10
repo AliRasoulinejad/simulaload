@@ -10,10 +10,13 @@ export class SubscriptionRegistry implements LoadPublisherInterface {
   private subscribers = new Map<NodeId, SubscriberEntry>();
   private lastDispatch = new Map<EdgeId, number>();
 
-  constructor(
-    private readonly publisherNodeId: NodeId,
-    private readonly publisherType: ComponentType,
-  ) {}
+  private readonly publisherNodeId: NodeId;
+  private readonly publisherType: ComponentType;
+
+  constructor(publisherNodeId: NodeId, publisherType: ComponentType) {
+    this.publisherNodeId = publisherNodeId;
+    this.publisherType = publisherType;
+  }
 
   subscribe(subscriber: LoadSubscriberInterface, edge: WeightedEdge): void {
     if (!subscriber.canAcceptUpstream(this.publisherType)) {

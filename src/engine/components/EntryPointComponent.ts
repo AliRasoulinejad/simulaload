@@ -12,7 +12,10 @@ export class EntryPointComponent implements LoadPublisherInterface, Configurable
   private clockHandle: ReturnType<typeof setInterval> | null = null;
   private lastDispatchedRps = 0;
 
-  constructor(public readonly nodeId: NodeId, config: EntryPointConfig) {
+  readonly nodeId: NodeId;
+
+  constructor(nodeId: NodeId, config: EntryPointConfig) {
+    this.nodeId = nodeId;
     this.targetRps = Math.max(0, config.targetRps);
     this.registry = new SubscriptionRegistry(nodeId, this.type);
   }
