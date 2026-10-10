@@ -89,6 +89,35 @@ describe("SimulationEngine", () => {
     expect(() => engine.addEdge("entry", "db", "e3")).toThrow(); // database still can't accept entryPoint
   });
 
+  it("rejects a second outgoing edge from an Entry Point (single-forward publisher)", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));
+    engine.addNode(new LoadBalancerComponent("lb1", { capacity: 10, queueDepth: 0 }));
+    engine.addNode(new CdnComponent("cdn1", { capacity: 10, queueDepth: 0, cacheHitRatio: 0 }));
+    engine.addEdge("entry", "lb1", "e1");
+    expect(() => engine.addEdge("entry", "cdn1", "e2")).toThrow();
+  });
+
+  it("allows a LoadBalancer and an Application to each have multiple outgoing edges", () => {
+    const engine = new SimulationEngine();
+    const lb = new LoadBalancerComponent("lb", { capacity: 100, queueDepth: 0 });
+    const app1 = new ApplicationComponent("app1", { capacity: 100, queueDepth: 0 });
+    const app2 = new ApplicationComponent("app2", { capacity: 100, queueDepth: 0 });
+    const cache = new CacheComponent("cache", { capacity: 100, queueDepth: 0, hitRatio: 0 });
+    const db = new DatabaseComponent("db", { capacity: 100, queueDepth: 0 });
+
+    engine.addNode(lb);
+    engine.addNode(app1);
+    engine.addNode(app2);
+    engine.addNode(cache);
+    engine.addNode(db);
+
+    expect(() => engine.addEdge("lb", "app1", "e1")).not.toThrow();
+    expect(() => engine.addEdge("lb", "app2", "e2")).not.toThrow();
+    expect(() => engine.addEdge("app1", "cache", "e3")).not.toThrow();
+    expect(() => engine.addEdge("app1", "db", "e4")).not.toThrow();
+  });
+
   it("notifies subscribers after every manual tick", () => {
     const engine = new SimulationEngine();
     engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));

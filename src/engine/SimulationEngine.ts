@@ -62,6 +62,12 @@ export class SimulationEngine {
     const target = this.nodes.get(targetId);
     if (!source || !target) throw new Error("Unknown node referenced in edge");
     if (!isPublisher(source)) throw new Error(`${source.type} cannot have outgoing edges`);
+    if (
+      (source.type === "entryPoint" || source.type === "cdn" || source.type === "cache") &&
+      Array.from(this.edgeRecords.values()).some((record) => record.sourceId === sourceId)
+    ) {
+      throw new Error(`${source.type} only supports a single outgoing edge`);
+    }
     if (!isSubscriber(target)) throw new Error(`${target.type} cannot have incoming edges`);
     if (!target.canAcceptUpstream(source.type)) {
       throw new Error(`${target.type} cannot accept upstream of type ${source.type}`);
