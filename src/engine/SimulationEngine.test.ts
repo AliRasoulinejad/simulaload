@@ -98,6 +98,32 @@ describe("SimulationEngine", () => {
     expect(() => engine.addEdge("entry", "cdn1", "e2")).toThrow();
   });
 
+  it("canConnect rejects a second outgoing edge from an Entry Point (single-forward publisher)", () => {
+    const engine = new SimulationEngine();
+    engine.addNode(new EntryPointComponent("entry", { targetRps: 10 }));
+    engine.addNode(new LoadBalancerComponent("lb1", { capacity: 10, queueDepth: 0 }));
+    engine.addNode(new CdnComponent("cdn1", { capacity: 10, queueDepth: 0, cacheHitRatio: 0 }));
+    engine.addEdge("entry", "lb1", "e1");
+    expect(engine.canConnect("entry", "cdn1")).toBe(false);
+  });
+
+  it("canConnect still allows a LoadBalancer/Application with an existing edge to add another", () => {
+    const engine = new SimulationEngine();
+    const lb = new LoadBalancerComponent("lb", { capacity: 100, queueDepth: 0 });
+    const app1 = new ApplicationComponent("app1", { capacity: 100, queueDepth: 0 });
+    const app2 = new ApplicationComponent("app2", { capacity: 100, queueDepth: 0 });
+    const cache = new CacheComponent("cache", { capacity: 100, queueDepth: 0, hitRatio: 0 });
+
+    engine.addNode(lb);
+    engine.addNode(app1);
+    engine.addNode(app2);
+    engine.addNode(cache);
+    engine.addEdge("lb", "app1", "e1");
+
+    expect(engine.canConnect("lb", "app2")).toBe(true);
+    expect(engine.canConnect("app1", "cache")).toBe(true);
+  });
+
   it("allows a LoadBalancer and an Application to each have multiple outgoing edges", () => {
     const engine = new SimulationEngine();
     const lb = new LoadBalancerComponent("lb", { capacity: 100, queueDepth: 0 });

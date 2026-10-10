@@ -63,10 +63,7 @@ export class SimulationEngine {
     const target = this.nodes.get(targetId);
     if (!source || !target) throw new Error("Unknown node referenced in edge");
     if (!isPublisher(source)) throw new Error(`${source.type} cannot have outgoing edges`);
-    if (
-      (source.type === "entryPoint" || source.type === "cdn" || source.type === "cache") &&
-      Array.from(this.edgeRecords.values()).some((record) => record.sourceId === sourceId)
-    ) {
+    if (this.violatesSingleOutgoingEdgeRule(source)) {
       throw new Error(`${source.type} only supports a single outgoing edge`);
     }
     if (!isSubscriber(target)) throw new Error(`${target.type} cannot have incoming edges`);
@@ -95,8 +92,20 @@ export class SimulationEngine {
     const target = this.nodes.get(targetId);
     if (!source || !target) return false;
     if (!isPublisher(source) || !isSubscriber(target)) return false;
+    if (this.violatesSingleOutgoingEdgeRule(source)) return false;
     if (!target.canAcceptUpstream(source.type)) return false;
     return !this.wouldCreateCycle(sourceId, targetId);
+  }
+
+  private hasExistingOutgoingEdge(sourceId: NodeId): boolean {
+    return Array.from(this.edgeRecords.values()).some((record) => record.sourceId === sourceId);
+  }
+
+  private violatesSingleOutgoingEdgeRule(source: AnyComponent): boolean {
+    return (
+      (source.type === "entryPoint" || source.type === "cdn" || source.type === "cache") &&
+      this.hasExistingOutgoingEdge(source.nodeId)
+    );
   }
 
   private wouldCreateCycle(sourceId: NodeId, targetId: NodeId): boolean {
