@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { SimulationEngine } from "../../engine/SimulationEngine";
 import type { NodeId } from "../../engine/types";
+import { formatTypeLabel } from "../canvas/formatTypeLabel";
+import "./inspectorPanel.css";
 
 interface InspectorPanelProps {
   engine: SimulationEngine;
@@ -70,11 +72,11 @@ export function InspectorPanel({ engine, selectedNodeId }: InspectorPanelProps) 
   const config = node.getConfig() as unknown as Record<string, number>;
 
   return (
-    <div data-testid="inspector-panel">
-      <h3>{node.type}</h3>
+    <div data-testid="inspector-panel" className="inspector-panel">
+      <h3 className="inspector-panel__title">{formatTypeLabel(node.type)}</h3>
       {fields.map((field) => (
-        <label key={field.key}>
-          {field.label}
+        <label key={field.key} className="inspector-field">
+          <span className="inspector-field__label">{field.label}</span>
           <input
             type="number"
             step={field.step ?? 1}

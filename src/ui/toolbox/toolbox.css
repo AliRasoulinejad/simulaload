@@ -1,0 +1,39 @@
+.toolbox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toolbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.toolbox-item svg {
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+
+.toolbox-item:hover {
+  background: var(--ink-800);
+  border-color: var(--line);
+}
+
+.toolbox-item:hover svg {
+  color: var(--signal);
+}
+
+.toolbox-item:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}

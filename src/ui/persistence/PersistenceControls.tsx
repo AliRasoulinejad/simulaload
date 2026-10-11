@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { exportGraph, importGraph } from "../../engine/graphIO";
 import type { SimulationEngine } from "../../engine/SimulationEngine";
 import type { NodeId } from "../../engine/types";
+import { ExportIcon, ImportIcon } from "../icons";
+import "./persistence.css";
 
 interface PersistenceControlsProps {
   engine: SimulationEngine;
@@ -38,11 +40,13 @@ export function PersistenceControls({ engine, positions, onImported }: Persisten
   };
 
   return (
-    <div data-testid="persistence-controls">
-      <button type="button" onClick={handleExport}>
+    <div data-testid="persistence-controls" className="persistence-controls">
+      <button type="button" className="persistence-button" onClick={handleExport}>
+        <ExportIcon />
         Export
       </button>
-      <button type="button" onClick={() => fileInputRef.current?.click()}>
+      <button type="button" className="persistence-button" onClick={() => fileInputRef.current?.click()}>
+        <ImportIcon />
         Import
       </button>
       <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />

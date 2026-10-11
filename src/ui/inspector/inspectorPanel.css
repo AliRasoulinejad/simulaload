@@ -1,0 +1,42 @@
+.inspector-panel {
+  width: 240px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--line);
+  background: var(--ink-900);
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.inspector-panel__title {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e7edf5;
+}
+
+.inspector-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.inspector-field__label {
+  color: var(--text-dim);
+}
+
+.inspector-field input {
+  background: var(--ink-800);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.inspector-field input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}

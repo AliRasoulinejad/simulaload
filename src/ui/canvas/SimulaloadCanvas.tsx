@@ -10,6 +10,7 @@ import {
   type NodeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "./canvas.css";
 import { nodeTypes } from "./nodeTypes";
 import { computeEdgeStyle } from "./computeEdgeStyle";
 import { useEngineSnapshot } from "../hooks/useEngineSnapshot";
@@ -182,8 +183,8 @@ export function SimulaloadCanvas({
           onNodeClick={(_, node) => onNodeClick?.(node.id)}
           fitView
         >
-          <Background />
-          <Controls />
+          <Background color="#26323f" gap={18} />
+          <Controls showInteractive={false} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>

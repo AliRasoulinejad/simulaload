@@ -1,0 +1,25 @@
+.summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  background: var(--ink-900);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.summary-bar__brand {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--signal);
+  letter-spacing: 0.02em;
+}
+
+.summary-bar__metrics {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}

@@ -7,7 +7,9 @@ import { InspectorPanel } from "./ui/inspector/InspectorPanel";
 import { SummaryBar } from "./ui/summary/SummaryBar";
 import { PersistenceControls } from "./ui/persistence/PersistenceControls";
 import { useEngineSnapshot } from "./ui/hooks/useEngineSnapshot";
+import { PauseIcon, PlayIcon } from "./ui/icons";
 import type { ComponentType, NodeId } from "./engine/types";
+import "./App.css";
 
 const ENTRY_POINT_ID = "entry-point";
 
@@ -73,38 +75,42 @@ function App() {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh" }}>
+    <div className="app-shell">
       <SummaryBar snapshot={snapshot} />
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button type="button" onClick={toggleRunning} aria-pressed={running}>
+      <div className="app-body">
+        <div className="palette">
+          <button type="button" className="palette-run" onClick={toggleRunning} aria-pressed={running}>
+            {running ? <PauseIcon /> : <PlayIcon />}
             {running ? "Pause" : "Start"}
           </button>
+          <div className="palette-section-label">Add component</div>
           <Toolbox onAdd={handleAdd} />
         </div>
-        <SimulaloadCanvas
-          engine={engine}
-          nodePositions={positions}
-          edgeRegistry={edgeRegistry}
-          onNodeClick={setSelectedNodeId}
-          onEdgeCreated={handleEdgeCreated}
-          onNodeMoved={handleNodeMoved}
-          onNodeRemoved={handleNodeRemoved}
-          onEdgeRemoved={handleEdgeRemoved}
-        />
+        <div className="app-canvas">
+          <SimulaloadCanvas
+            engine={engine}
+            nodePositions={positions}
+            edgeRegistry={edgeRegistry}
+            onNodeClick={setSelectedNodeId}
+            onEdgeCreated={handleEdgeCreated}
+            onNodeMoved={handleNodeMoved}
+            onNodeRemoved={handleNodeRemoved}
+            onEdgeRemoved={handleEdgeRemoved}
+          />
+          <PersistenceControls
+            engine={engine}
+            positions={positions}
+            onImported={(positions) => {
+              // importGraph cleared the engine (which also stops its clock).
+              setRunning(false);
+              setSelectedNodeId(null);
+              setPositions(positions);
+              setEdgeRegistry(engine.getEdges().map(({ edgeId, sourceId, targetId }) => ({ edgeId, source: sourceId, target: targetId })));
+            }}
+          />
+        </div>
         <InspectorPanel engine={engine} selectedNodeId={selectedNodeId} />
       </div>
-      <PersistenceControls
-        engine={engine}
-        positions={positions}
-        onImported={(positions) => {
-          // importGraph cleared the engine (which also stops its clock).
-          setRunning(false);
-          setSelectedNodeId(null);
-          setPositions(positions);
-          setEdgeRegistry(engine.getEdges().map(({ edgeId, sourceId, targetId }) => ({ edgeId, source: sourceId, target: targetId })));
-        }}
-      />
     </div>
   );
 }

@@ -1,0 +1,38 @@
+.react-flow {
+  background: var(--ink-950);
+}
+
+.react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: var(--ink-900);
+  border-bottom: 1px solid var(--line);
+  fill: var(--text-dim);
+  stroke: var(--text-dim);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--ink-800);
+}
+
+.react-flow__controls-button svg {
+  fill: var(--text-dim);
+}
+
+.react-flow__attribution {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.react-flow__edge-path {
+  stroke: #3a4a5c;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--signal);
+}
